@@ -3,7 +3,7 @@
 //   1. 管理房間（建立／加入／人數／控制權）
 //   2. 回報伺服器目前時間，讓每支手機算出自己的時差
 //   3. 把節拍設定廣播給同房間的人
-//   4. （精簡版）把意見回饋轉給 Google 試算表
+//   4. 把意見回饋、使用統計轉給 Google 試算表；畫分享預覽卡片
 // 注意：伺服器不傳送任何聲音，也不負責漸快的計時。
 //       聲音和漸快都由每支手機依照同一組參數自己算，算式一樣就必然一致。
 
@@ -57,6 +57,8 @@ const MANIFEST = JSON.stringify({
 
 const FEEDBACK_URL = process.env.FEEDBACK_URL || '';
 const FEEDBACK_SECRET = process.env.FEEDBACK_SECRET || '';
+// 三個網站（精簡版、測試版、Demo 版）共用同一張試算表，每一筆都標上是哪個網站送來的
+const SITE = process.env.SITE_NAME || 'testing';
 const FB_MAX = 2000, FB_MAIL_MAX = 100;
 const FB_PER_IP = 5, FB_WINDOW_MS = 10 * 60 * 1000;   // 同一個人 10 分鐘內最多 5 則
 const FB_PER_DAY = 80;                               // 全站每天上限（Google 免費帳號一天大約能寄 100 封信）
@@ -119,7 +121,7 @@ function handleFeedback(req, res) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          secret: FEEDBACK_SECRET,
+          secret: FEEDBACK_SECRET, site: SITE,
           message, email,
           lang: m.lang === 'en' ? 'en' : 'zh',
           room: typeof m.room === 'string' ? m.room.slice(0, 8) : '',
@@ -166,7 +168,7 @@ function sessionEnd(r) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      secret: FEEDBACK_SECRET, kind: 'room',
+      secret: FEEDBACK_SECRET, kind: 'room', site: SITE,
       start: new Date(s.start).toISOString(),
       minutes: min(Date.now() - s.start), playMinutes: min(s.playMs),
       peak: s.peak, joins: s.joins,
@@ -476,6 +478,18 @@ function cleanMute(m) {
   return { on: !!m.on, play, rest };
 }
 
+// 現在是哪一首：曲名，從歌單切過來的話再加上歌單名稱、第幾首、共幾首。
+// 只是顯示用的文字，長度截短、數字限範圍就好。
+function cleanNow(n) {
+  if (!n || typeof n !== 'object' || typeof n.title !== 'string' || !n.title.trim()) return null;
+  const out = { title: n.title.trim().slice(0, 30) };
+  const pos = intIn(n.pos, 1, 999), total = intIn(n.total, 1, 999);
+  if (typeof n.set === 'string' && n.set.trim() && pos !== null && total !== null && pos <= total) {
+    out.set = n.set.trim().slice(0, 30); out.pos = pos; out.total = total;
+  }
+  return out;
+}
+
 // 預備拍：開始前先數 bars 小節；loop 的話每個 phrase 小節的樂句前都重新數一次
 function cleanCount(c) {
   if (!c || typeof c !== 'object') return null;
@@ -518,6 +532,7 @@ function createRoom() {
     ramp: { on: false, bars: 4, step: 2, target: 160 },
     mute: { on: false, play: 3, rest: 1 },
     count: { on: false, bars: 1, loop: false, phrase: 4 },
+    playing: null,
     locked: false,
     owner: null,
     running: false,
@@ -543,6 +558,7 @@ function stateOf(code) {
     ramp: r.ramp,
     mute: r.mute,
     count: r.count,
+    playing: r.playing,
     locked: r.locked,
     running: r.running,
     startAt: r.startAt,
@@ -706,6 +722,7 @@ wss.on('connection', (ws) => {
         if (m.ramp) { const rr = cleanRamp(m.ramp); if (rr) r.ramp = rr; }
         if (m.mute) { const mm = cleanMute(m.mute); if (mm) r.mute = mm; }
         if (m.count) { const cc = cleanCount(m.count); if (cc) r.count = cc; }
+        r.playing = cleanNow(m.playing);      // 現在是哪一首（全房顯示）；舊版前端沒送就清掉
         if (r.running) r.startAt = Date.now() + LEAD_MS;
         break;
       }
