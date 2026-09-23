@@ -1820,6 +1820,26 @@ body.in-room.leaving .tabbar{animation:tabbarDown .16s ease-in forwards}
 #room .soon .hint{margin:0;max-width:20rem}
 #room .soon .btn-link{margin-top:.3rem}
 html[data-mode="light"] #room .soon b{color:var(--navy)}
+/* 我的細分：收起來是一行，點開是有音符圖的清單 */
+/* 外面包一層 div 來承接面板給子元素的左右邊距：按鈕自己寫 width:100% 再加邊距會撐出框外，
+   但按鈕是表單元件，寬度設 auto 又只會縮到文字寬度，所以讓外層負責對齊、裡面填滿 */
+.mysub-pick{margin-top:.6rem}
+.mysub-btn{display:flex;align-items:center;justify-content:space-between;gap:.5rem;width:100%;
+  margin:0;padding:.5rem .7rem;border-radius:10px;
+  border:1px solid var(--line) !important;background:var(--card-soft) !important;color:var(--navy) !important}
+.mysub-cur{display:flex;align-items:center;gap:.5rem;min-width:0;font-size:.88rem}
+.mysub-cur svg{height:1.5rem;width:auto;flex:0 0 auto}
+.mysub-caret{width:1rem;height:1rem;flex:0 0 auto;opacity:.7}
+.mysub-sheet{max-width:20rem;padding-top:1.2rem}
+.mysub-sheet .fb-title{display:block;margin:0 0 .8rem;text-align:center}
+.mysub-list{display:flex;flex-direction:column;gap:.35rem;max-height:60vh;overflow:auto}
+.mysub-opt{display:flex;align-items:center;gap:.7rem;width:100%;padding:.5rem .7rem;border-radius:12px;
+  border:1px solid var(--line) !important;background:var(--card-soft) !important;color:var(--navy) !important;
+  font-size:.9rem;text-align:left}
+.mysub-opt .mysub-note{display:flex;align-items:center;justify-content:center;width:2.4rem;flex:0 0 auto}
+.mysub-opt .mysub-note svg{height:1.6rem;width:auto}
+.mysub-opt.on{border-color:var(--brass) !important;background:color-mix(in srgb,var(--brass) 12%,transparent) !important;
+  color:var(--brass) !important;font-weight:650}
 </style>
 </head>
 <body>
@@ -1940,6 +1960,73 @@ html[data-mode="light"] #room .soon b{color:var(--navy)}
     <button id="resumeBar" class="btn" style="display:none"></button>
     <p id="roomMsg" class="err" style="text-align:center;font-size:.82rem"></p>
 
+    <!-- 漸快訓練 -->
+    <details>
+      <summary><span data-i18n="rampTitle">漸快訓練</span> <b id="rampLabel" data-i18n="off">關閉</b></summary>
+      <label class="setrow" style="margin-top:.6rem">
+        <input type="checkbox" id="rampOn">
+        <span data-i18n="enable">啟用</span>
+      </label>
+      <div class="setrow" style="margin-top:.5rem">
+        <span class="grp">
+          <span data-i18n="rampEvery">每</span>
+          <button class="mini" id="barsMinus" aria-label="減少小節" data-i18n-aria="barsLess">−</button>
+          <input class="setval numin" id="barsVal" value="4" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" enterkeyhint="done" autocomplete="off" aria-label="每幾小節加速一次" data-i18n-aria="barsValAria">
+          <button class="mini" id="barsPlus" aria-label="增加小節" data-i18n-aria="barsMore">＋</button>
+          <span data-i18n="rampBarsAdd">小節，加</span>
+        </span>
+        <span class="grp">
+          <button class="mini" id="stepMinus" aria-label="減少增量" data-i18n-aria="stepLess">−</button>
+          <input class="setval numin" id="stepVal" value="2" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" enterkeyhint="done" autocomplete="off" aria-label="每次加多少 BPM" data-i18n-aria="stepValAria">
+          <button class="mini" id="stepPlus" aria-label="增加增量" data-i18n-aria="stepMore">＋</button>
+          <span>BPM</span>
+        </span>
+      </div>
+      <div class="volrow" style="margin-top:.2rem">
+        <span data-i18n="rampTo">到</span>
+        <input id="targetRange" type="range" min="15" max="600" step="1" value="160" aria-label="目標速度" data-i18n-aria="targetAria">
+        <input class="val numin" id="targetVal" value="160" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" enterkeyhint="done" autocomplete="off" aria-label="目標速度" data-i18n-aria="targetAria">
+      </div>
+    </details>
+
+    <!-- 靜音訓練 -->
+    <details>
+      <summary><span data-i18n="muteTitle">靜音訓練</span> <b id="muteLabel" data-i18n="off">關閉</b></summary>
+      <label class="setrow" style="margin-top:.6rem">
+        <input type="checkbox" id="muteOn">
+        <span data-i18n="enable">啟用</span>
+      </label>
+      <div class="setrow" style="margin-top:.5rem">
+        <span class="grp">
+          <span data-i18n="muteEvery">每</span>
+          <button class="mini" id="playMinus" aria-label="減少有聲小節" data-i18n-aria="playLess">−</button>
+          <input class="setval numin" id="playVal" value="3" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" enterkeyhint="done" autocomplete="off" aria-label="有聲小節數" data-i18n-aria="playValAria">
+          <button class="mini" id="playPlus" aria-label="增加有聲小節" data-i18n-aria="playMore">＋</button>
+          <span data-i18n="muteBarsRest">小節，靜音</span>
+        </span>
+        <span class="grp">
+          <button class="mini" id="restMinus" aria-label="減少靜音小節" data-i18n-aria="restLess">−</button>
+          <input class="setval numin" id="restVal" value="1" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" enterkeyhint="done" autocomplete="off" aria-label="靜音小節數" data-i18n-aria="restValAria">
+          <button class="mini" id="restPlus" aria-label="增加靜音小節" data-i18n-aria="restMore">＋</button>
+          <span data-i18n="muteBars">小節</span>
+        </span>
+      </div>
+    </details>
+
+    <!-- 我的細分（每個人自己的，不受鎖影響）。主拍時刻完全不變，只是這支手機多聽或少聽幾顆細分，
+         所以跟大家還是對齊的：貝斯手可以只聽主拍，鼓手可以聽十六分 -->
+    <details>
+      <summary><span data-i18n="mySubTitle">我的細分</span> <b id="mySubLabel" data-i18n="mySubFollow">跟著房間</b></summary>
+      <!-- 點開才選：原生的下拉選單只能放文字，放不了音符圖，所以自己做一個 -->
+      <div class="mysub-pick">
+        <button class="mysub-btn" id="mySubBtn" aria-haspopup="dialog" aria-label="我的細分" data-i18n-aria="mySubTitle">
+          <span class="mysub-cur" id="mySubCur"></span>
+          <svg class="mysub-caret" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5 8 10.5l4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <p class="hint" data-i18n="mySubHint">只改你自己聽到的細分，拍子還是跟大家一樣。</p>
+    </details>
+
     <!-- 耳機延遲 -->
     <details>
       <summary><span data-i18n="latTitle">我的耳機延遲</span> <b id="latLabel">0 ms</b></summary>
@@ -2045,6 +2132,15 @@ html[data-mode="light"] #room .soon b{color:var(--navy)}
           <li data-i18n="howTip5">房主換了耳機的話，其他人要重新對一次。</li>
         </ul>
       </div>
+    </div>
+  </div>
+
+  <!-- 我的細分：點「我的細分」那一行會打開，每個選項都有音符圖 -->
+  <div id="mySubSheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="mySubSheetTitle" hidden>
+    <div class="sheet-card mysub-sheet">
+      <button class="sheet-close" id="mySubClose" aria-label="關閉" data-i18n-aria="close">×</button>
+      <h2 class="fb-title" id="mySubSheetTitle" data-i18n="mySubTitle">我的細分</h2>
+      <div class="mysub-list" id="mySubList"></div>
     </div>
   </div>
 
@@ -2267,6 +2363,12 @@ function needsServerSetup(){
 
 const SUB_LIST = [1, 2, 3, 4, 5, 6, 7];
 
+// 我的細分：0 = 跟著房間。只換這支手機聽到的細分，主拍時刻不變，所以不會跟別人跑掉。
+// 實際用的值放在 st.subLocal（0 或沒設定就退回房間的 st.sub），排程和音軌都讀那個
+let mySub = 0;
+try { mySub = Number(localStorage.getItem('mmMySub')) || 0; } catch(e){}
+if (!SUB_LIST.includes(mySub)) mySub = 0;
+
 // 速度範圍。一拍永遠是 60÷BPM 秒，也永遠當成四分音符來看。
 // 以前有二分／附點四分／八分的單位切換，後來拿掉，改成直接把範圍放寬。
 const BPM_MIN = 15, BPM_MAX = 600;
@@ -2424,7 +2526,45 @@ const UI_ZH = {
   // 預備拍
   countNow:       (k, all) => '預備 ' + k + '／' + all,
 
+  // 漸快訓練
+  rampTitle:   '漸快訓練',
+  off:         '關閉',
+  enable:      '啟用',
+  rampEvery:   '每',
+  rampBarsAdd: '小節，加',
+  rampTo:      '到',
+  barsLess:    '減少小節',
+  barsMore:    '增加小節',
+  stepLess:    '減少增量',
+  stepMore:    '增加增量',
+  targetAria:  '目標速度',
+  barsValAria: '每幾小節加速一次',
+  stepValAria: '每次加多少 BPM',
+  playValAria: '有聲小節數',
+  restValAria: '靜音小節數',
+  rampLabel:   (bars, step, target) => '每 ' + bars + ' 小節 +' + step + ' 到 ' + target,
+
+  // 靜音訓練
+  muteTitle:   '靜音訓練',
+  muteEvery:   '每',
+  muteBarsRest:'小節，靜音',
+  muteBars:    '小節',
+  playLess:    '減少有聲小節',
+  playMore:    '增加有聲小節',
+  restLess:    '減少靜音小節',
+  restMore:    '增加靜音小節',
+  muteLabel:   (play, rest) => '每 ' + play + ' 小節靜音 ' + rest,
+
+  // 我的細分
+  mySubTitle:  '我的細分',
+  mySubFollow: '跟著房間',
+  mySubPer:    (name, n) => name + (n === 1 ? '（只有主拍）' : '（一拍 ' + n + ' 下）'),
+  mySubHint:   '只改你自己聽到的細分，拍子還是跟大家一樣。',
+
   // 耳機延遲
+  // 鎖屏／控制中心顯示的字
+  mediaTitle:  '同步節拍器',
+  mediaRoom:   (code, bpm) => '房號 ' + code + ' · ' + bpm + ' BPM',
   latTitle:    '我的耳機延遲',
   latAria:     '耳機延遲',
   latLess:     '延遲減 5 毫秒',
@@ -2542,6 +2682,40 @@ const UI_EN = {
 
 
 
+  rampTitle:   'Speed trainer',
+  off:         'Off',
+  enable:      'On',
+  rampEvery:   'Every',
+  rampBarsAdd: 'bars +',
+  rampTo:      'Up to',
+  barsLess:    'Fewer bars',
+  barsMore:    'More bars',
+  stepLess:    'Smaller step',
+  stepMore:    'Bigger step',
+  targetAria:  'Target tempo',
+  barsValAria: 'Bars between speed-ups',
+  stepValAria: 'BPM added each time',
+  playValAria: 'Playing bars',
+  restValAria: 'Silent bars',
+  rampLabel:   (bars, step, target) => '+' + step + ' every ' + bars + ' bars → ' + target,
+
+  muteTitle:   'Gap trainer',
+  muteEvery:   'Play',
+  muteBarsRest:'mute',
+  muteBars:    'bars',
+  playLess:    'Fewer playing bars',
+  playMore:    'More playing bars',
+  restLess:    'Fewer silent bars',
+  restMore:    'More silent bars',
+  muteLabel:   (play, rest) => 'Play ' + play + ', silent ' + rest,
+
+  mySubTitle:  'My subdivision',
+  mySubFollow: 'Follow the room',
+  mySubPer:    (name, n) => name + (n === 1 ? ' (beat only)' : ' (' + n + ' per beat)'),
+  mySubHint:   'Changes only what you hear. Your beat stays in sync with everyone.',
+
+  mediaTitle:  'Sync Metronome',
+  mediaRoom:   (code, bpm) => 'Room ' + code + ' · ' + bpm + ' BPM',
   latTitle:    'My headphone delay',
   latAria:     'Headphone delay',
   latLess:     'Delay −5 ms',
@@ -2603,6 +2777,7 @@ const LINES_ZH = {
   tooFew:     '希望每天都是星期天～希望每拍都是第一拍～。',
   allAccent:  '全部都是重音，等於全部都不是。',
   keepFirst:  '你設定了其他拍是重音，安能辨誰是小節第一拍？',
+  rampDown:   n => '目標比現在的 ' + n + ' 還慢，那不叫漸快。',
   mute:       '此時無聲勝有聲。',
   unmute:     '兩岸猿聲啼不住。',
   resynced:   '回來了。已重新對時。',
@@ -2638,6 +2813,7 @@ const LINES_EN = {
   tooFew:     'If only every day were Sunday, and every beat were beat one.',
   allAccent:  'When every beat is accented, none of them are.',
   keepFirst:  'With other beats accented, who could tell which one starts the bar?',
+  rampDown:   n => 'The target is slower than the current ' + n + '. That’s not speeding up.',
   mute:       'Silence speaks louder than sound.',
   unmute:     'And the sound comes rushing back.',
   resynced:   'Welcome back. Re-synced.',
@@ -2686,6 +2862,7 @@ let synced = false;
 let sock = null, wantCode = null, retry = 0;
 const st = {
   code:null, bpm:90, beats:4, accents:[1,0,0,0], sub:1,
+  subLocal:mySub,   // 我的細分（0 = 跟著房間）。只影響這支手機聽到的，不送給伺服器
   ramp:{ on:false, bars:4, step:2, target:160 },
   mute:{ on:false, play:3, rest:1 },
   count:{ on:false, bars:1, loop:false, phrase:4 },   // 預備拍（loop：每個樂句前都重新數）
@@ -2839,6 +3016,7 @@ async function ensureAudio(){
     loadCountSample();
   }
   if (ctx.state !== 'running') await ctx.resume();
+  blessMediaEl();   // 趁著這次的使用者動作，先讓鎖屏用的音檔拿到播放許可
 }
 
 // 把嵌在網頁裡的預備拍錄音解碼成這台裝置的取樣率。
@@ -3037,7 +3215,7 @@ function makeSchedule(){
   if (st.count && st.count.on) return makeCountSchedule();
   const bpm0 = grid.bpm;
   const beats = st.beats;
-  const sub = st.sub;
+  const sub = st.subLocal || st.sub;
   const R = st.ramp || { on:false };
   const on = !!R.on && R.step > 0 && R.target > bpm0;
   const segBeats = Math.max(1, (R.bars || 4) * beats); // 一段有幾個主拍
@@ -3101,7 +3279,7 @@ function makeSchedule(){
 function makeCountSchedule(){
   const bpm0 = grid.bpm;
   const beats = st.beats;
-  const sub = st.sub;
+  const sub = st.subLocal || st.sub;
   const perBar = beats * sub;
   const R = st.ramp || { on:false };
   const rampOn = !!R.on && R.step > 0 && R.target > bpm0;
@@ -3290,7 +3468,7 @@ let bgLastStart = 0;
 let holdUntil = 0;   // 這個時刻之前由背景音軌負責，節點排程不要重複發聲
 
 function trackSig(){
-  return [grid.bpm, st.beats, st.accents.join(''), st.sub,
+  return [grid.bpm, st.beats, st.accents.join(''), st.subLocal || st.sub,
           st.ramp.on ? [st.ramp.bars, st.ramp.step, st.ramp.target].join('/') : 'off',
           st.mute.on ? [st.mute.play, st.mute.rest].join('/') : 'off',
           st.count && st.count.on ? [st.count.bars, st.count.loop ? st.count.phrase : 'once'].join('/') : 'off'
@@ -3651,7 +3829,161 @@ function renderSubs(){
     b.setAttribute('aria-label', UI.subAria(n, subLabel(n)));
     b.classList.toggle('on', n === st.sub);
   }
+  renderMySub();
 }
+
+/* ---------- 我的細分 ----------
+   房間的速度、拍號、重音照舊同步，只有「一拍聽幾顆」可以自己決定。
+   因為主拍的時刻沒變，所以選幾等分都跟大家對得上。 */
+// 點開才選：一整排八顆按鈕太佔版面，但原生的下拉選單只能放文字、放不了音符圖，
+// 所以自己做一個——平常收成一行，點了跳出清單，每一列都有音符圖加文字
+function mySubText(n){
+  return n ? UI.mySubPer(subLabel(n), n) : UI.mySubFollow;
+}
+function renderMySub(){
+  const list = $('mySubList');
+  if (!list.children.length){
+    for (const n of [0, ...SUB_LIST]){
+      const b = document.createElement('button');
+      b.className = 'mysub-opt';
+      b.dataset.n = n;
+      b.innerHTML = '<span class="mysub-note"></span><span class="mysub-name"></span>';
+      b.onclick = () => { setMySub(n); closeSheet('mySubSheet'); };
+      list.appendChild(b);
+    }
+  }
+  // 「跟著房間」那一列畫房間目前的音符，順便告訴你現在房間是幾等分
+  for (const b of list.children){
+    const n = Number(b.dataset.n);
+    b.querySelector('.mysub-note').innerHTML = subNoteSvg(n || st.sub);
+    b.querySelector('.mysub-name').textContent = n ? mySubText(n)
+      : UI.mySubFollow + '（' + subLabel(st.sub) + '）';
+    b.classList.toggle('on', n === mySub);
+  }
+  $('mySubCur').innerHTML = subNoteSvg(mySub || st.sub) +
+    '<span>' + (mySub ? mySubText(mySub) : UI.mySubFollow) + '</span>';
+  $('mySubLabel').textContent = mySub ? subLabel(mySub) : UI.mySubFollow;
+}
+
+$('mySubBtn').onclick = () => openSheet('mySubSheet');
+$('mySubClose').onclick = () => closeSheet('mySubSheet');
+
+function setMySub(n){
+  if (n === mySub) return;
+  mySub = n;
+  st.subLocal = n;
+  try { localStorage.setItem('mmMySub', n); } catch(e){}
+  renderMySub();
+  reschedule();          // 時刻不變，只是哪幾顆發聲變了，重排就好
+}
+
+
+/* ---------- 10. 漸快訓練 ---------- */
+
+let rampTimer = null;
+function pushRamp(){
+  clearTimeout(rampTimer);
+  rampTimer = setTimeout(() => send({ t:'ramp', ...st.ramp }), 200);
+}
+
+function renderRamp(){
+  const R = st.ramp;
+  $('rampOn').checked = R.on;
+  showNum('barsVal', R.bars);
+  showNum('stepVal', R.step);
+  showNum('targetVal', R.target);
+  if (!draggingTarget) $('targetRange').value = R.target;
+  $('rampLabel').textContent = R.on
+    ? UI.rampLabel(R.bars, R.step, R.target)
+    : UI.off;
+}
+
+function setRamp(patch){
+  if (!guard()) return;
+  st.ramp = { ...st.ramp, ...patch };
+  renderRamp();
+  pushRamp();
+  if (st.ramp.on && st.ramp.target <= st.bpm) toast(LINES.rampDown(st.bpm));
+}
+
+$('rampOn').onchange = e => {
+  if (!canControl()){ e.target.checked = st.ramp.on; denied(); return; }
+  setRamp({ on: e.target.checked });
+};
+$('barsMinus').onclick = () => setRamp({ bars: Math.max(1, st.ramp.bars - 1) });
+$('barsPlus').onclick  = () => setRamp({ bars: Math.min(16, st.ramp.bars + 1) });
+$('stepMinus').onclick = () => setRamp({ step: Math.max(1, st.ramp.step - 1) });
+$('stepPlus').onclick  = () => setRamp({ step: Math.min(20, st.ramp.step + 1) });
+
+// 漸快、靜音訓練的數字可以直接點來打，會跳出數字鍵盤。
+// 打字的過程中不送，按 Enter／完成或離開這格才算數；超出範圍就停在上下限。
+// 正在打的那格不要被畫面更新蓋掉。
+function showNum(id, v){
+  const el = $(id);
+  if (document.activeElement !== el) el.value = v;
+}
+function bindNum(id, min, max, apply, rerender){
+  const el = $(id);
+  el.addEventListener('focus', () => el.select());
+  el.addEventListener('input', () => { el.value = el.value.replace(/\D/g, ''); });
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Enter'){ e.preventDefault(); el.blur(); }
+  });
+  el.addEventListener('change', () => {
+    const raw = el.value.trim();
+    if (raw !== '') apply(clamp(Math.round(Number(raw)), min, max));   // 上鎖時會在 setRamp／setMute 裡被擋下
+    el.blur();
+    rerender();        // 空白、被擋下或被夾到上下限，都要把格子改回實際的數字
+  });
+}
+bindNum('barsVal',   1, 16, v => setRamp({ bars: v }),   renderRamp);
+bindNum('stepVal',   1, 20, v => setRamp({ step: v }),   renderRamp);
+bindNum('targetVal', BPM_MIN, BPM_MAX, v => setRamp({ target: v }), renderRamp);
+
+let draggingTarget = false;
+$('targetRange').addEventListener('pointerdown', () => { draggingTarget = true; });
+$('targetRange').addEventListener('input', e => {
+  $('targetVal').value = e.target.value;
+  setRamp({ target: Number(e.target.value) });
+});
+['pointerup','pointercancel','blur'].forEach(ev =>
+  $('targetRange').addEventListener(ev, () => { draggingTarget = false; }));
+
+/* ---------- 10b. 靜音訓練 ---------- */
+
+let muteTimer = null;
+function pushMute(){
+  clearTimeout(muteTimer);
+  muteTimer = setTimeout(() => send({ t:'mute', ...st.mute }), 200);
+}
+
+function renderMute(){
+  const M = st.mute;
+  $('muteOn').checked = M.on;
+  showNum('playVal', M.play);
+  showNum('restVal', M.rest);
+  $('muteLabel').textContent = M.on ? UI.muteLabel(M.play, M.rest) : UI.off;
+}
+
+function setMute(patch){
+  if (!guard()) return;
+  st.mute = { ...st.mute, ...patch };
+  renderMute();
+  reschedule();      // 時刻不變，但哪幾拍不出聲變了，要重排
+  pushMute();
+}
+
+$('muteOn').onchange = e => {
+  if (!canControl()){ e.target.checked = st.mute.on; denied(); return; }
+  setMute({ on: e.target.checked });
+};
+$('playMinus').onclick = () => setMute({ play: Math.max(1, st.mute.play - 1) });
+$('playPlus').onclick  = () => setMute({ play: Math.min(16, st.mute.play + 1) });
+$('restMinus').onclick = () => setMute({ rest: Math.max(1, st.mute.rest - 1) });
+$('restPlus').onclick  = () => setMute({ rest: Math.min(16, st.mute.rest + 1) });
+bindNum('playVal', 1, 16, v => setMute({ play: v }), renderMute);
+bindNum('restVal', 1, 16, v => setMute({ rest: v }), renderMute);
+
 
 /* ---------- 11. 畫面更新 ---------- */
 
@@ -3689,9 +4021,12 @@ function onState(m){
   }
   $('play').textContent = m.running ? UI.stop : UI.start;
   $('play').classList.toggle('on', m.running);
+  syncMedia();      // 鎖屏／控制中心的播放鍵跟著房間走
 
   renderBeats();
   renderSubs();
+  renderRamp();
+  renderMute();
   renderLock();
 
   if (gridChanged) resetGrid();
@@ -4194,13 +4529,14 @@ function closeSheet(id){
   s.classList.remove('show');
   setTimeout(() => { s.hidden = true; }, 180);
 }
-for (const id of ['fbSheet', 'qrSheet', 'helpSheet', 'leaveSheet']){
+for (const id of ['fbSheet', 'qrSheet', 'helpSheet', 'leaveSheet', 'mySubSheet']){
   $(id).addEventListener('click', e => { if (e.target.id === id) closeSheet(id); });   // 點外面關掉
 }
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if (!$('qrSheet').hidden) closeSheet('qrSheet');
   if (!$('helpSheet').hidden) closeSheet('helpSheet');
+  if (!$('mySubSheet').hidden) closeSheet('mySubSheet');
   if (!$('leaveSheet').hidden) $('leaveNo').click();     // 按 Esc 等於選「留下」
   if (!$('fbSheet').hidden) $('fbClose').click();
 });
@@ -4241,6 +4577,7 @@ function backToGate(){
   history.replaceState(null, '', location.pathname);
   screenTarget = 'gate';
   swapScreen('gate', 'back');
+  syncMedia();      // 離開房間就把鎖屏上的播放鍵收掉
 }
 
 $('leaveBtn').title = UI.leave;     // 滑鼠移上去時的提示
@@ -4286,6 +4623,94 @@ window.addEventListener('popstate', () => {
   if (leaveNeedsAsk()){ pushRoomState(); askLeave(doLeave); return; }
   doLeave();
 });
+
+/* ---------- 鎖屏／控制中心的播放鍵 ----------
+   聲音是用 Web Audio 直接算出來的，沒有播放器元素，所以 iPhone 的鎖屏和控制中心
+   雖然因為 audioSession = 'playback' 長出一個播放鍵，按了卻沒人接。
+   解法兩步：掛一段幾乎無聲的循環音檔當「門面」，讓系統認得這個網頁在播東西；
+   再用 Media Session 把那顆鍵導回我們的開始／停止。按暫停＝整個房間一起停。 */
+
+// 幾乎無聲的 1 秒音檔。真的全部填 0 的話，有些系統會當成沒在播而不給控制權，
+// 所以留最小的一格振幅（聽不到）。現算現產，不用把一長串 base64 塞進檔案裡
+function quietWavUrl(){
+  const rate = 8000, n = rate, bytes = 44 + n * 2;
+  const buf = new ArrayBuffer(bytes), v = new DataView(buf);
+  const str = (off, s) => { for (let i = 0; i < s.length; i++) v.setUint8(off + i, s.charCodeAt(i)); };
+  str(0, 'RIFF'); v.setUint32(4, bytes - 8, true); str(8, 'WAVEfmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true);
+  v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  str(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, i % 2 ? 1 : -1, true);
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+
+let mediaEl = null;
+
+function ensureMediaEl(){
+  if (mediaEl) return mediaEl;
+  mediaEl = document.createElement('audio');
+  mediaEl.loop = true;
+  mediaEl.playsInline = true;
+  mediaEl.preload = 'auto';
+  mediaEl.src = quietWavUrl();
+  mediaEl.style.display = 'none';
+  document.body.appendChild(mediaEl);
+  // 耳機線控、別的 App 搶走聲音時，系統會直接暫停這個元素，沒有經過 Media Session。
+  // 那也算使用者要停；我們自己收掉時 st.running 已經是 false，不會再觸發一次
+  mediaEl.addEventListener('pause', () => { if (st.running) mediaStop(); });
+  return mediaEl;
+}
+
+// 第一次的使用者動作裡先播一下再收起來：之後別人按開始時，就不用再等一次手勢
+function blessMediaEl(){
+  try {
+    const el = ensureMediaEl();
+    if (!el.paused) return;
+    const p = el.play();
+    if (p && p.then) p.then(() => { if (!st.running) el.pause(); }).catch(() => {});
+  } catch(e){}
+}
+
+function mediaPlay(){
+  if (!canControl()) return syncMedia();   // 沒有控制權就把狀態改回去，鎖屏才不會顯示錯的
+  ensureAudio(); keepAwake();
+  send({ t:'start' });
+}
+function mediaStop(){
+  if (!canControl()) return syncMedia();
+  send({ t:'stop' });
+}
+
+// 房間的播放狀態一變就跟著改：音檔跟著開關，鎖屏上的字也換成現在的房號和速度
+function syncMedia(){
+  const on = !!st.running;
+  if (on || mediaEl){
+    const el = ensureMediaEl();
+    if (on && el.paused){ const p = el.play(); if (p && p.catch) p.catch(() => {}); }
+    if (!on && !el.paused) el.pause();
+  }
+  if (!('mediaSession' in navigator)) return;
+  try {
+    navigator.mediaSession.playbackState = on ? 'playing' : 'paused';
+    const meta = {
+      title:  UI.mediaTitle,
+      artist: st.code ? UI.mediaRoom(st.code, grid.bpm || st.bpm) : '',
+    };
+    // 圖示只在正常網址下帶：解析不出網址的話，MediaMetadata 會整包拒收，連標題都沒了
+    if (/^https?:/.test(location.protocol)){
+      meta.artwork = [{ src: new URL('/icon.png', location.href).href, sizes: '512x512', type: 'image/png' }];
+    }
+    navigator.mediaSession.metadata = new MediaMetadata(meta);
+  } catch(e){}
+}
+
+if ('mediaSession' in navigator){
+  const setMediaKey = (k, fn) => { try { navigator.mediaSession.setActionHandler(k, fn); } catch(e){} };
+  setMediaKey('play',  mediaPlay);
+  setMediaKey('pause', mediaStop);
+  setMediaKey('stop',  mediaStop);
+}
 
 /* ---------- 13. 螢幕不要睡著 ---------- */
 
@@ -4410,6 +4835,8 @@ if (/^[A-Z0-9]{4}$/.test(fromLink)) $('code').value = fromLink;
 applyI18n();
 renderBeats();
 renderSubs();
+renderRamp();
+renderMute();
 paintTempo(st.bpm, null);
 connect();
 
